@@ -238,6 +238,79 @@ struct DataAddress
 DataAddress.__name__ = 'data_address'
 
 
+WalkingStruct = cstruct.parse("""
+#define MAX_SIO_NUM 2 //default of kondoh7(2023/08/25) refer to rcb4 controlboard uart port num
+#define MIN_SERVO_IDX 0
+#define MAX_SERVO_IDX 17
+#define MAX_SERVO_NUM (MAX_SERVO_IDX - MIN_SERVO_IDX + 1) * MAX_SIO_NUM
+
+struct WalkingStruct
+{
+  uint16_t reset_pose_angle[MAX_SERVO_NUM];
+  uint16_t zero_angle[MAX_SERVO_NUM];
+  float default_transition_time;
+  // float cog_leg_offset[2][3];
+  float cog_leg_offset[6];
+  // float ankle_foot_offset[2][3];
+  float ankle_foot_offset[6];
+  float reset_pose_offset;
+  float knee_deg_offset;
+  float default_step_time[4];
+  float cog_offsets[3];
+  float reset_pose_height;
+  float omega;
+  // float zmp_offsets[2][3];
+  // float dcm_offsets[2][3];
+  float zmp_offsets[6];
+  float dcm_offsets[6];
+  float default_step_height[4];
+  float step_length;
+  float cog_move_gain;
+  float cp_estimate_gain;
+  float ankle_strategy_gain;
+  float safe_leg_margin[4];
+  float overwritable_length[4];
+  float double_support_time_ratio;
+  float walking_direction[3];
+  // float hip_p_offset[2][3];
+  float hip_p_offset[6];
+  float thigh_len;  // m
+  float shin_len;   // m
+  // float ankle_r_offset[2][3];
+  float ankle_r_offset[6];
+  float transition_time;
+  float step_time;
+  float step_height;
+  float remain_time;
+  float double_remain_time;
+  float alpha;
+  float support_remain_time[2];
+  float goal_z_offset;
+
+  uint16_t num_step;
+  uint16_t is_trimed;
+  uint16_t is_khr;
+  uint16_t is_feedback_control;
+  uint16_t leg_hip_r;
+  uint16_t leg_hip_p;
+  uint16_t leg_knee_p;
+  uint16_t leg_ankle_p;
+  uint16_t leg_ankle_r;
+  uint8_t is_walking_ready;
+  uint8_t is_walking_mode;
+
+  uint8_t is_push_button;
+  uint8_t is_double;
+  uint16_t step_index;
+  uint16_t n_step;
+  uint16_t step_offset;
+  uint16_t is_transform;
+  uint16_t is_contact_check;
+  uint16_t is_contact[2];
+};
+""")
+
+
 c_vector = {
     'servo_vector': 36,
     'Sensor_vector': max_sensor_num,
@@ -246,4 +319,5 @@ c_vector = {
     'Worm_vector': max_wormmodule_num,
     'SysB': 0,
     'data_address': 0,
+    'WalkB': 0,
 }
