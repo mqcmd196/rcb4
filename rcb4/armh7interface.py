@@ -1445,10 +1445,11 @@ class ARMH7Interface:
     def read_current_limit(self, servo_ids=None):
         if servo_ids is None:
             servo_ids = self.servo_sorted_ids
-        return [
+        current_vector = [
             self.servo_param64(sid, ["current_limit"])["current_limit"] // 2
             for sid in servo_ids
         ]
+        return interpolate_currents(current_vector)
 
     def switch_reading_servo_temperature(self, enable=True):
         if enable:
@@ -1481,10 +1482,11 @@ class ARMH7Interface:
     def read_temperature_limit(self, servo_ids=None):
         if servo_ids is None:
             servo_ids = self.servo_sorted_ids
-        return [
+        temperature_vector = [
             self.servo_param64(sid, ["temperature_limit"])["temperature_limit"] // 2
             for sid in servo_ids
         ]
+        return interpolate_or_extrapolate_temperatures(temperature_vector)
 
 
 if __name__ == "__main__":
