@@ -1408,6 +1408,23 @@ class ARMH7Interface:
             return servo_on_ids
         return []
 
+    def switch_reading_servo_temperature(self, enable=True):
+        if enable:
+            value = 1
+        else:
+            value = 0
+        return self.write_cstruct_slot_v(
+            SystemStruct, "servo_temperature_read_flag", [value])
+
+    def read_servo_temperature(self):
+         servo_ids = self.search_servo_ids()
+         if len(servo_ids) == 0:
+             return np.zeros(shape=0)
+         temperature_vector = self.read_cstruct_slot_vector(
+             ServoStruct, 'temperature')
+         return temperature_vector[servo_ids]
+
+
 
 if __name__ == "__main__":
     interface = ARMH7Interface()
