@@ -1442,6 +1442,14 @@ class ARMH7Interface:
             )
         return estimated_current_vector
 
+    def read_current_limit(self, servo_ids=None):
+        if servo_ids is None:
+            servo_ids = self.servo_sorted_ids
+        return [
+            self.servo_param64(sid, ["current_limit"])["current_limit"] // 2
+            for sid in servo_ids
+        ]
+
     def switch_reading_servo_temperature(self, enable=True):
         if enable:
             value = 1
@@ -1469,6 +1477,14 @@ class ARMH7Interface:
                 servo_temperatures[non_zero_mask]
             )
         return estimated_temperatures
+
+    def read_temperature_limit(self, servo_ids=None):
+        if servo_ids is None:
+            servo_ids = self.servo_sorted_ids
+        return [
+            self.servo_param64(sid, ["temperature_limit"])["temperature_limit"] // 2
+            for sid in servo_ids
+        ]
 
 
 if __name__ == "__main__":
