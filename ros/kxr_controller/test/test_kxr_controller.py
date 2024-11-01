@@ -28,11 +28,11 @@ class TestKXRController(unittest.TestCase):
 
     def test_follow_joint_trajectory(self):
         self.ri.servo_on()
-        self.ri.angle_vector(self.robot_model.init_pose(), 1.0)
+        self.ri.angle_vector(self.robot_model.init_pose(), 3.0)
         self.ri.wait_interpolation()
         self.robot_model.HEAD_JOINT0.joint_angle(np.deg2rad(45))
         self.robot_model.HEAD_JOINT1.joint_angle(np.deg2rad(45))
-        self.ri.angle_vector(self.robot_model.angle_vector(), 1.0)
+        self.ri.angle_vector(self.robot_model.angle_vector(), 3.0)
         self.ri.wait_interpolation()
         rospy.sleep(1.0)
         current_angles = self.ri.angle_vector()
@@ -43,7 +43,7 @@ class TestKXRController(unittest.TestCase):
             + f"Current angles = {current_angles}, "
             + f"Expected angles = {expected_angles}",
         )
-        self.ri.angle_vector(self.robot_model.init_pose(), 1.0)
+        self.ri.angle_vector(self.robot_model.init_pose(), 3.0)
         self.ri.wait_interpolation()
         self.ri.servo_off()
 
