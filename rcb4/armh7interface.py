@@ -1435,7 +1435,7 @@ class ARMH7Interface:
         servo_current_vector[servo_current_vector == 64] = 0
 
         # Apply calculations only on non-zero values
-        estimated_current_vector = np.zeros_like(servo_current_vector)
+        estimated_current_vector = np.zeros_like(servo_current_vector, dtype=np.float32)
         if np.any(non_zero_mask):
             estimated_current_vector[non_zero_mask] = interpolate_currents(
                 servo_current_vector[non_zero_mask]
@@ -1471,7 +1471,7 @@ class ARMH7Interface:
         non_zero_mask = servo_temperatures != 0
 
         # Apply calculations only on non-zero values
-        estimated_temperatures = np.zeros_like(servo_temperatures)
+        estimated_temperatures = np.zeros_like(servo_temperatures, dtype=np.float32)
         if np.any(non_zero_mask):
             estimated_temperatures[non_zero_mask] = interpolate_or_extrapolate_temperatures(
                 servo_temperatures[non_zero_mask]

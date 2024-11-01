@@ -14,11 +14,11 @@ from rcb4.asm import rcb4_checksum
 from rcb4.asm import rcb4_velocity
 
 # Known data points for temperature and setting values
-temperature_data = np.array([100, 90, 80, 70, 60])
-temperature_setting_values_data = np.array([30, 47, 60, 75, 87])
+temperature_data = np.array([100, 90, 80, 70, 60], dtype=np.float32)
+temperature_setting_values_data = np.array([30, 47, 60, 75, 87], dtype=np.float32)
 # Known data points for current and setting values
-current_data = np.array([0.0, 0.1, 0.5, 1.0, 1.5, 2.0])  # in Amps
-current_setting_values_data = np.array([0, 1, 5, 10, 15, 20])  # setting values
+current_data = np.array([0.0, 0.1, 0.5, 1.0, 1.5, 2.0], dtype=np.float32)  # in Amps
+current_setting_values_data = np.array([0, 1, 5, 10, 15, 20], dtype=np.float32)  # setting values
 
 
 def interpolate_or_extrapolate_temperatures(setting_values):
