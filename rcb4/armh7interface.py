@@ -1431,15 +1431,11 @@ class ARMH7Interface:
         servo_current_vector = current_vector[servo_ids]
 
         # Create a mask for non-zero values (i.e., values that are valid and need processing)
-        non_zero_mask = servo_current_vector != 64
-        servo_current_vector[servo_current_vector == 64] = 0
+        inverted_servo_mask = servo_current_vector >= 64
+        servo_current_vector[inverted_servo_mask] -= 64
 
         # Apply calculations only on non-zero values
-        estimated_current_vector = np.zeros_like(servo_current_vector, dtype=np.float32)
-        if np.any(non_zero_mask):
-            estimated_current_vector[non_zero_mask] = interpolate_currents(
-                servo_current_vector[non_zero_mask]
-            )
+        estimated_current_vector = interpolate_currents(servo_current_vector)
         return estimated_current_vector
 
     def read_current_limit(self, servo_ids=None):
