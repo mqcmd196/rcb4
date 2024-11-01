@@ -1428,14 +1428,18 @@ class ARMH7Interface:
             return np.zeros(shape=0)
 
         current_vector = self.read_cstruct_slot_vector(ServoStruct, "current")
-        servo_current_vector = current_vector[servo_ids]
+        servo_current_vector = np.array(current_vector[servo_ids], dtype=np.float32)
 
         # Create a mask for non-zero values (i.e., values that are valid and need processing)
         inverted_servo_mask = servo_current_vector >= 64
+        inverted_zero_servo_mask = servo_current_vector == 64
+        if np.any(inverted_zero_servo_mask):
+            servo_current_vector[inverted_zero_servo_mask] += 0.000001
         servo_current_vector[inverted_servo_mask] -= 64
 
         # Apply calculations only on non-zero values
         estimated_current_vector = interpolate_currents(servo_current_vector)
+        estimated_current_vector[inverted_servo_mask] *= -1.0
         return estimated_current_vector
 
     def read_current_limit(self, servo_ids=None):
