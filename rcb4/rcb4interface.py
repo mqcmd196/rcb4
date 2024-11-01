@@ -15,27 +15,29 @@ from rcb4.asm import rcb4_velocity
 
 # Known data points for temperature and setting values
 temperature_data = np.array([100, 90, 80, 70, 60])
-setting_values_data = np.array([30, 47, 60, 75, 87])
-
+temperature_setting_values_data = np.array([30, 47, 60, 75, 87])
 # Known data points for current and setting values
 current_data = np.array([0.0, 0.1, 0.5, 1.0, 1.5, 2.0])  # in Amps
-setting_values_data = np.array([0, 1, 5, 10, 15, 20])  # setting values
+current_setting_values_data = np.array([0, 1, 5, 10, 15, 20])  # setting values
 
 
 def interpolate_or_extrapolate_temperatures(setting_values):
     """Approximation of temperatures for an array of setting values."""
+    setting_values = np.atleast_1d(setting_values)  # Ensure setting_values is an array
+
     # Calculate slopes for interpolation between points
     slopes = (temperature_data[1:] - temperature_data[:-1]) / (
-        setting_values_data[1:] - setting_values_data[:-1]
+        temperature_setting_values_data[1:] - temperature_setting_values_data[:-1]
     )
-    # Find indices where each setting value would fit within setting_values_data
-    indices = np.searchsorted(setting_values_data, setting_values, side="right") - 1
+
+    # Find indices where each setting value would fit within temperature_setting_values_data
+    indices = np.searchsorted(temperature_setting_values_data, setting_values, side="right") - 1
 
     # Handle in-range values (interpolation)
     in_range = (indices >= 0) & (indices < len(slopes))
     interpolated_values = temperature_data[indices[in_range]] + slopes[
         indices[in_range]
-    ] * (setting_values[in_range] - setting_values_data[indices[in_range]])
+    ] * (setting_values[in_range] - temperature_setting_values_data[indices[in_range]])
 
     # Initialize result array with zeros (or any placeholder values)
     temperatures = np.zeros_like(setting_values, dtype=float)
@@ -44,29 +46,32 @@ def interpolate_or_extrapolate_temperatures(setting_values):
     temperatures[in_range] = interpolated_values
 
     # Extrapolate for values below the minimum setting value
-    below_range = setting_values < setting_values_data[0]
+    below_range = setting_values < temperature_setting_values_data[0]
     temperatures[below_range] = temperature_data[0] + slopes[0] * (
-        setting_values[below_range] - setting_values_data[0]
+        setting_values[below_range] - temperature_setting_values_data[0]
     )
 
     # Extrapolate for values above the maximum setting value
-    above_range = setting_values > setting_values_data[-1]
+    above_range = setting_values > temperature_setting_values_data[-1]
     temperatures[above_range] = temperature_data[-1] + slopes[-1] * (
-        setting_values[above_range] - setting_values_data[-1]
+        setting_values[above_range] - temperature_setting_values_data[-1]
     )
 
-    return temperatures
+    # If input was a single value, return a single float instead of an array
+    return temperatures if len(temperatures) > 1 else temperatures[0]
 
 
 def interpolate_currents(setting_values):
     """Approximation of current values for an array of setting values."""
+    setting_values = np.atleast_1d(setting_values)  # Ensure setting_values is an array
+
     # Calculate slopes for interpolation between points
     slopes = (current_data[1:] - current_data[:-1]) / (
-        setting_values_data[1:] - setting_values_data[:-1]
+        current_setting_values_data[1:] - current_setting_values_data[:-1]
     )
 
-    # Find indices where each setting value would fit within setting_values_data
-    indices = np.searchsorted(setting_values_data, setting_values, side="right") - 1
+    # Find indices where each setting value would fit within current_setting_values_data
+    indices = np.searchsorted(current_setting_values_data, setting_values, side="right") - 1
 
     # Initialize result array with zeros (or any placeholder values)
     current_values = np.zeros_like(setting_values, dtype=float)
@@ -75,21 +80,22 @@ def interpolate_currents(setting_values):
     in_range = (indices >= 0) & (indices < len(slopes))
     current_values[in_range] = current_data[indices[in_range]] + slopes[
         indices[in_range]
-    ] * (setting_values[in_range] - setting_values_data[indices[in_range]])
+    ] * (setting_values[in_range] - current_setting_values_data[indices[in_range]])
 
     # Extrapolate for values below the minimum setting value
-    below_range = setting_values < setting_values_data[0]
+    below_range = setting_values < current_setting_values_data[0]
     current_values[below_range] = current_data[0] + slopes[0] * (
-        setting_values[below_range] - setting_values_data[0]
+        setting_values[below_range] - current_setting_values_data[0]
     )
 
     # Extrapolate for values above the maximum setting value
-    above_range = setting_values > setting_values_data[-1]
+    above_range = setting_values > current_setting_values_data[-1]
     current_values[above_range] = current_data[-1] + slopes[-1] * (
-        setting_values[above_range] - setting_values_data[-1]
+        setting_values[above_range] - current_setting_values_data[-1]
     )
 
-    return current_values
+    # If input was a single value, return a single float instead of an array
+    return current_values if len(current_values) > 1 else current_values[0]
 
 
 # 4000.0 / 135
