@@ -30,6 +30,7 @@ from rcb4.rcb4interface import rcb4_dof
 from rcb4.rcb4interface import RCB4Interface
 from rcb4.rcb4interface import ServoOnOffValues
 from rcb4.rcb4interface import ServoParams
+from rcb4.rcb4interface import interpolate_or_extrapolate_temperatures
 from rcb4.struct_header import c_vector
 from rcb4.struct_header import DataAddress
 from rcb4.struct_header import GPIOStruct
@@ -1419,16 +1420,27 @@ class ARMH7Interface:
         else:
             value = 0
         return self.write_cstruct_slot_v(
-            SystemStruct, "servo_temperature_read_flag", [value])
+            SystemStruct, "servo_temperature_read_flag", [value]
+        )
 
     def read_servo_temperature(self):
-         servo_ids = self.search_servo_ids()
-         if len(servo_ids) == 0:
-             return np.zeros(shape=0)
-         temperature_vector = self.read_cstruct_slot_vector(
-             ServoStruct, 'temperature')
-         return temperature_vector[servo_ids]
+        servo_ids = self.search_servo_ids()
+        if len(servo_ids) == 0:
+            return np.zeros(shape=0)
 
+        temperature_vector = self.read_cstruct_slot_vector(ServoStruct, "temperature")
+        servo_temperatures = temperature_vector[servo_ids]
+
+        # Create a mask for non-zero values (i.e., values that are valid and need processing)
+        non_zero_mask = servo_temperatures != 0
+
+        # Apply calculations only on non-zero values
+        estimated_temperatures = np.zeros_like(servo_temperatures)
+        if np.any(non_zero_mask):
+            estimated_temperatures[non_zero_mask] = interpolate_or_extrapolate_temperatures(
+                servo_temperatures[non_zero_mask]
+            )
+        return estimated_temperatures
 
 
 if __name__ == "__main__":

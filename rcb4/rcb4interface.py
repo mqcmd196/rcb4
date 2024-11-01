@@ -13,6 +13,47 @@ from rcb4.asm import encode_servo_velocity_and_position_to_bytes
 from rcb4.asm import rcb4_checksum
 from rcb4.asm import rcb4_velocity
 
+# Known data points for temperature and setting values
+temperature_data = np.array([100, 90, 80, 70, 60])
+setting_values_data = np.array([30, 47, 60, 75, 87])
+
+
+def interpolate_or_extrapolate_temperatures(setting_values):
+    """Approximation of temperatures for an array of setting values."""
+    # Calculate slopes for interpolation between points
+    slopes = (temperature_data[1:] - temperature_data[:-1]) / (
+        setting_values_data[1:] - setting_values_data[:-1]
+    )
+    # Find indices where each setting value would fit within setting_values_data
+    indices = np.searchsorted(setting_values_data, setting_values, side="right") - 1
+
+    # Handle in-range values (interpolation)
+    in_range = (indices >= 0) & (indices < len(slopes))
+    interpolated_values = temperature_data[indices[in_range]] + slopes[
+        indices[in_range]
+    ] * (setting_values[in_range] - setting_values_data[indices[in_range]])
+
+    # Initialize result array with zeros (or any placeholder values)
+    temperatures = np.zeros_like(setting_values, dtype=float)
+
+    # Set interpolated values
+    temperatures[in_range] = interpolated_values
+
+    # Extrapolate for values below the minimum setting value
+    below_range = setting_values < setting_values_data[0]
+    temperatures[below_range] = temperature_data[0] + slopes[0] * (
+        setting_values[below_range] - setting_values_data[0]
+    )
+
+    # Extrapolate for values above the maximum setting value
+    above_range = setting_values > setting_values_data[-1]
+    temperatures[above_range] = temperature_data[-1] + slopes[-1] * (
+        setting_values[above_range] - setting_values_data[-1]
+    )
+
+    return temperatures
+
+
 # 4000.0 / 135
 deg_to_servovector = 29.62962962962963
 
