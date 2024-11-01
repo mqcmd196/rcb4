@@ -26,11 +26,12 @@ from rcb4.ctype_utils import c_type_to_size
 from rcb4.data import kondoh7_elf
 from rcb4.rcb4interface import CommandTypes
 from rcb4.rcb4interface import deg_to_servovector
+from rcb4.rcb4interface import interpolate_currents
+from rcb4.rcb4interface import interpolate_or_extrapolate_temperatures
 from rcb4.rcb4interface import rcb4_dof
 from rcb4.rcb4interface import RCB4Interface
 from rcb4.rcb4interface import ServoOnOffValues
 from rcb4.rcb4interface import ServoParams
-from rcb4.rcb4interface import interpolate_or_extrapolate_temperatures
 from rcb4.struct_header import c_vector
 from rcb4.struct_header import DataAddress
 from rcb4.struct_header import GPIOStruct
@@ -1413,6 +1414,33 @@ class ARMH7Interface:
                 servo_on_ids = servo_on_ids[~mask]
             return servo_on_ids
         return []
+
+    def switch_reading_servo_crreunt(self, enable=True):
+        if enable:
+            value = 1
+        else:
+            value = 0
+        return self.write_cstruct_slot_v(SystemStruct, "servo_current_read_flag", [value])
+
+    def read_servo_current(self):
+        servo_ids = self.search_servo_ids()
+        if len(servo_ids) == 0:
+            return np.zeros(shape=0)
+
+        current_vector = self.read_cstruct_slot_vector(ServoStruct, "current")
+        servo_current_vector = current_vector[servo_ids]
+
+        # Create a mask for non-zero values (i.e., values that are valid and need processing)
+        non_zero_mask = servo_current_vector != 64
+        servo_current_vector[servo_current_vector == 64] = 0
+
+        # Apply calculations only on non-zero values
+        estimated_current_vector = np.zeros_like(servo_current_vector)
+        if np.any(non_zero_mask):
+            estimated_current_vector[non_zero_mask] = interpolate_currents(
+                servo_current_vector[non_zero_mask]
+            )
+        return estimated_current_vector
 
     def switch_reading_servo_temperature(self, enable=True):
         if enable:
