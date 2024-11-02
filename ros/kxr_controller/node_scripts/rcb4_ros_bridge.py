@@ -143,6 +143,9 @@ def set_robot_description(urdf_path, param_name="robot_description"):
 
 class RCB4ROSBridge:
     def __init__(self):
+        self._update_temperature_limit = False
+        self._update_current_limit = False
+
         self._during_servo_off = False
         # Set up configuration paths and parameters
         self.setup_paths_and_params()
@@ -468,6 +471,10 @@ class RCB4ROSBridge:
     def config_callback(self, config, level):
         self.frame_count = config.frame_count
         self.wheel_frame_count = config.wheel_frame_count
+        self.current_limit = config.current_limit
+        self.temperature_limit = config.temperature_limit
+        self._update_temperature_limit = True
+        self._update_current_limit = True
         return config
 
     def get_ids(self, type="servo", max_retries=10):
@@ -1010,6 +1017,23 @@ class RCB4ROSBridge:
         self.success_rate_threshold = 0.8  # Minimum success rate required
 
         while not rospy.is_shutdown():
+            if self._update_current_limit:
+                ret = serial_call_with_retry(self.interface.send_current_limit,
+                                             self.current_limit, max_retries=3)
+                if ret is not None:
+                    rospy.loginfo(f"Current limit set {self.current_limit}")
+                    self._update_current_limit = False
+                else:
+                    rospy.logwarn("Could not set current limit")
+            if self._update_temperature_limit:
+                ret = serial_call_with_retry(self.interface.send_temperature_limit,
+                                       self.temperature_limit, max_retries=3)
+                if ret is not None:
+                    rospy.loginfo(f"Temperature limit set {self.temperature_limit}")
+                    self._update_temperature_limit = False
+                else:
+                    rospy.logwarn("Could not set temperature limit")
+
             success = self.publish_joint_states()
             self.publish_joint_states_attempts += 1
             if success:

@@ -14,6 +14,8 @@
   <arg name="model_server_port" default="8123" />
   <arg name="joint_group_description" default="" />
   <arg name="frame_count" default="50" />
+  <arg name="current_limit" default="4.0" doc="current limit in Amp" />
+  <arg name="temperature_limit" default="80" doc="Temperature limit in celsius" />
 
   <group if="$(eval len(arg('namespace')) > 0)" ns="$(arg namespace)" >
     <param name="control_loop_rate" value="$(arg control_loop_rate)" />
@@ -43,6 +45,8 @@
         imu_frame_id: $(arg namespace)/$(arg imu_frame_id)
         use_rcb4: $(arg use_rcb4)
         frame_count: $(arg frame_count)
+        current_limit: $(arg current_limit)
+        temperature_limit: $(arg temperature_limit)
       </rosparam>
     </node>
     <node name="urdf_model_server"
@@ -78,6 +82,8 @@
         imu_frame_id: $(arg imu_frame_id)
         use_rcb4: $(arg use_rcb4)
         frame_count: $(arg frame_count)
+        current_limit: $(arg current_limit)
+        temperature_limit: $(arg temperature_limit)
       </rosparam>
     </node>
 
