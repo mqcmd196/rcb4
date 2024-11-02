@@ -705,6 +705,8 @@ class ARMH7Interface:
                 self.servo_on_states_dict[index] = True
             else:
                 self.servo_on_states_dict[index] = False
+        # internally call actuator_to_joint_matrix to initialize it.
+        self.actuator_to_joint_matrix  # NOQA
         return servo_indices
 
     def search_air_board_ids(self):
