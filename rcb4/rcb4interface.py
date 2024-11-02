@@ -98,6 +98,81 @@ def interpolate_currents(setting_values):
     return current_values if len(current_values) > 1 else current_values[0]
 
 
+def interpolate_or_extrapolate_temperature_settings(temperatures):
+    """Approximation of setting values for an array of temperatures."""
+    temperatures = np.atleast_1d(temperatures)  # Ensure temperatures is an array
+
+    # Calculate slopes for interpolation between points
+    slopes = (temperature_setting_values_data[1:] - temperature_setting_values_data[:-1]) / (
+        temperature_data[1:] - temperature_data[:-1]
+    )
+
+    # Find indices where each temperature would fit within temperature_data
+    indices = np.searchsorted(temperature_data[::-1], temperatures, side="right") - 1
+    indices = len(temperature_data) - 1 - indices  # Reverse indices for original order
+
+    # Initialize result array with zeros (or any placeholder values)
+    setting_values = np.zeros_like(temperatures, dtype=float)
+
+    # Interpolate within range
+    in_range = (indices >= 0) & (indices < len(slopes))
+    setting_values[in_range] = temperature_setting_values_data[indices[in_range]] + slopes[
+        indices[in_range]
+    ] * (temperatures[in_range] - temperature_data[indices[in_range]])
+
+    # Extrapolate for values below the minimum temperature
+    below_range = temperatures > temperature_data[0]
+    setting_values[below_range] = temperature_setting_values_data[0] + slopes[0] * (
+        temperatures[below_range] - temperature_data[0]
+    )
+
+    # Extrapolate for values above the maximum temperature
+    above_range = temperatures < temperature_data[-1]
+    setting_values[above_range] = temperature_setting_values_data[-1] + slopes[-1] * (
+        temperatures[above_range] - temperature_data[-1]
+    )
+
+    # If input was a single value, return a single float instead of an array
+    return setting_values if len(setting_values) > 1 else setting_values[0]
+
+
+def interpolate_or_extrapolate_current_settings(currents):
+    """Approximation of setting values for an array of currents."""
+    currents = np.atleast_1d(currents)  # Ensure currents is an array
+
+    # Calculate slopes for interpolation between points
+    slopes = (current_setting_values_data[1:] - current_setting_values_data[:-1]) / (
+        current_data[1:] - current_data[:-1]
+    )
+
+    # Find indices where each current would fit within current_data
+    indices = np.searchsorted(current_data, currents, side="right") - 1
+
+    # Initialize result array with zeros (or any placeholder values)
+    setting_values = np.zeros_like(currents, dtype=float)
+
+    # Interpolate within range
+    in_range = (indices >= 0) & (indices < len(slopes))
+    setting_values[in_range] = current_setting_values_data[indices[in_range]] + slopes[
+        indices[in_range]
+    ] * (currents[in_range] - current_data[indices[in_range]])
+
+    # Extrapolate for values below the minimum current
+    below_range = currents < current_data[0]
+    setting_values[below_range] = current_setting_values_data[0] + slopes[0] * (
+        currents[below_range] - current_data[0]
+    )
+
+    # Extrapolate for values above the maximum current
+    above_range = currents > current_data[-1]
+    setting_values[above_range] = current_setting_values_data[-1] + slopes[-1] * (
+        currents[above_range] - current_data[-1]
+    )
+
+    # If input was a single value, return a single float instead of an array
+    return setting_values if len(setting_values) > 1 else setting_values[0]
+
+
 # 4000.0 / 135
 deg_to_servovector = 29.62962962962963
 

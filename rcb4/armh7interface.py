@@ -27,6 +27,8 @@ from rcb4.data import kondoh7_elf
 from rcb4.rcb4interface import CommandTypes
 from rcb4.rcb4interface import deg_to_servovector
 from rcb4.rcb4interface import interpolate_currents
+from rcb4.rcb4interface import interpolate_or_extrapolate_current_settings
+from rcb4.rcb4interface import interpolate_or_extrapolate_temperature_settings
 from rcb4.rcb4interface import interpolate_or_extrapolate_temperatures
 from rcb4.rcb4interface import rcb4_dof
 from rcb4.rcb4interface import RCB4Interface
@@ -919,6 +921,38 @@ class ARMH7Interface:
         byte_list.append(rcb4_checksum(byte_list))
         return self.serial_write(byte_list)
 
+    def send_current_limit(self, current_limit_a=4.0, servo_ids=None):
+        if servo_ids is None:
+            servo_ids = self.servo_sorted_ids
+        current_setting = interpolate_or_extrapolate_current_settings(current_limit_a)
+        if not isinstance(current_setting, (list, tuple)):
+            current_setting = [current_setting] * len(servo_ids)
+        byte_list = (
+            [CommandTypes.ServoParam.value]
+            + encode_servo_ids_to_5bytes_bin(servo_ids)
+            + [ServoParams.CurrentLimit.value]
+            + rcb4_servo_svector(servo_ids, current_setting)
+        )
+        byte_list.insert(0, 2 + len(byte_list))
+        byte_list.append(rcb4_checksum(byte_list))
+        return self.serial_write(byte_list)
+
+    def send_temperature_limit(self, temperature_limit_c=80, servo_ids=None):
+        if servo_ids is None:
+            servo_ids = self.servo_sorted_ids
+        temperature_setting = interpolate_or_extrapolate_temperature_settings(temperature_limit_c)
+        if not isinstance(temperature_setting, (list, tuple)):
+            temperature_setting = [temperature_setting] * len(servo_ids)
+        byte_list = (
+            [CommandTypes.ServoParam.value]
+            + encode_servo_ids_to_5bytes_bin(servo_ids)
+            + [ServoParams.TemperatureLimit.value]
+            + rcb4_servo_svector(servo_ids, temperature_setting)
+        )
+        byte_list.insert(0, 2 + len(byte_list))
+        byte_list.append(rcb4_checksum(byte_list))
+        return self.serial_write(byte_list)
+
     def read_quaternion(self):
         cs = self.memory_cstruct(Madgwick, 0)
         return np.array([cs.q0, cs.q1, cs.q2, cs.q3], dtype=np.float32)
@@ -1446,7 +1480,7 @@ class ARMH7Interface:
         if servo_ids is None:
             servo_ids = self.servo_sorted_ids
         current_vector = [
-            self.servo_param64(sid, ["current_limit"])["current_limit"] // 2
+            self.servo_param64(sid, ["current_limit"])["current_limit"]
             for sid in servo_ids
         ]
         return interpolate_currents(current_vector)
@@ -1483,7 +1517,7 @@ class ARMH7Interface:
         if servo_ids is None:
             servo_ids = self.servo_sorted_ids
         temperature_vector = [
-            self.servo_param64(sid, ["temperature_limit"])["temperature_limit"] // 2
+            self.servo_param64(sid, ["temperature_limit"])["temperature_limit"]
             for sid in servo_ids
         ]
         return interpolate_or_extrapolate_temperatures(temperature_vector)
