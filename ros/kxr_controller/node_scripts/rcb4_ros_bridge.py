@@ -25,6 +25,8 @@ from kxr_controller.msg import PressureControlResult
 from kxr_controller.msg import ServoOnOff
 from kxr_controller.msg import ServoOnOffAction
 from kxr_controller.msg import ServoOnOffResult
+from kxr_controller.msg import ServoState
+from kxr_controller.msg import ServoStateArray
 from kxr_controller.msg import Stretch
 from kxr_controller.msg import StretchAction
 from kxr_controller.msg import StretchResult
@@ -176,6 +178,8 @@ class RCB4ROSBridge:
         self.urdf_path = rospy.get_param("~urdf_path", None)
         self.use_rcb4 = rospy.get_param("~use_rcb4", False)
         self.control_pressure = rospy.get_param("~control_pressure", False)
+        self.read_temperature = rospy.get_param("~read_temperature", True) and not self.use_rcb4
+        self.read_current = rospy.get_param("~read_current", True) and not self.use_rcb4
         self.base_namespace = self.get_base_namespace()
 
     def setup_urdf_and_model(self):
@@ -206,6 +210,10 @@ class RCB4ROSBridge:
         """Set up ROS publishers and action servers."""
         self.current_joint_states_pub = rospy.Publisher(
             self.base_namespace + "/current_joint_states", JointState, queue_size=1
+        )
+
+        self.servo_states_pub = rospy.Publisher(
+            self.base_namespace + "/servo_states", ServoStateArray, queue_size=1
         )
 
         # Publish servo state like joint_trajectory_controller
@@ -354,6 +362,11 @@ class RCB4ROSBridge:
             rospy.logerr(msg)
             self.interface.close()
             return False
+
+        if self.read_current:
+            serial_call_with_retry(self.interface.switch_reading_servo_crreunt, enable=True, max_retries=3)
+        if self.read_temperature:
+            serial_call_with_retry(self.interface.switch_reading_servo_temperature, enable=True, max_retries=3)
 
         wheel_servo_sorted_ids = []
         trim_vector_servo_ids = []
@@ -943,20 +956,44 @@ class RCB4ROSBridge:
     def publish_joint_states(self):
         av = serial_call_with_retry(self.interface.angle_vector)
         torque_vector = serial_call_with_retry(self.interface.servo_error)
+        if self.read_current:
+            currents = serial_call_with_retry(self.interface.read_servo_current)
+        else:
+            currents = None
+        if self.read_temperature:
+            temperatures = serial_call_with_retry(self.interface.read_servo_temperature)
+        else:
+            temperatures = None
         if av is None or torque_vector is None:
             return
         msg = JointState()
         msg.header.stamp = rospy.Time.now()
+        servos_msg = ServoStateArray()
+        servos_msg.header.stamp = msg.header.stamp
         for name in self.joint_names:
             if name in self.joint_name_to_id:
                 servo_id = self.joint_name_to_id[name]
                 idx = self.interface.servo_id_to_index(servo_id)
                 if idx is None:
                     continue
-                msg.position.append(np.deg2rad(av[idx]))
-                msg.effort.append(torque_vector[idx])
+                position = np.deg2rad(av[idx])
+                effort = torque_vector[idx]
+                msg.position.append(position)
+                msg.effort.append(effort)
                 msg.name.append(name)
+                servo_state_msg = ServoState(
+                    header=msg.header,
+                    name=name,
+                    position=position,
+                    error=effort,
+                    temperature=temperatures)
+                if temperatures is not None and len(temperatures) > idx:
+                    servo_state_msg.temperature = temperatures[idx]
+                if currents is not None and len(currents) > idx:
+                    servo_state_msg.current = currents[idx]
+                servos_msg.servos.append(servo_state_msg)
         self.current_joint_states_pub.publish(msg)
+        self.servo_states_pub.publish(servos_msg)
         return True
 
     def publish_servo_on_off(self):
@@ -982,6 +1019,10 @@ class RCB4ROSBridge:
         self.unsubscribe()
         self.interface.close()
         self.interface = self.setup_interface()
+        if self.read_current:
+            serial_call_with_retry(self.interface.switch_reading_servo_crreunt, enable=True, max_retries=3)
+        if self.read_temperature:
+            serial_call_with_retry(self.interface.switch_reading_servo_temperature, enable=True, max_retries=3)
         self.subscribe()
         rospy.loginfo("Successfully reinitialized interface.")
 
