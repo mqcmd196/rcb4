@@ -282,7 +282,10 @@ class ARMH7Interface:
 
     def check_ack(self):
         ack_byte_list = self.get_ack()
-        return ack_byte_list[1] == 0x06
+        if ack_byte_list is not None and len(ack_byte_list) > 1:
+            return ack_byte_list[1] == 0x06
+        else:
+            return False
 
     def check_firmware_version(self):
         version = self.get_version()
