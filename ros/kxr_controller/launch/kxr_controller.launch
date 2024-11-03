@@ -33,8 +33,9 @@
           output="screen"
           required="true" >
       <param name="device" type="str" value="$(arg device)" />
+      <param name="urdf_path" type="str" value="$(arg urdf_path)"
+             if="$(eval len(arg('urdf_path')) > 0)"/>
       <rosparam subst_value="true" >
-        urdf_path: $(arg urdf_path)
         servo_config_path: $(arg servo_config_path)
         publish_imu: $(arg publish_imu)
         publish_sensor: $(arg publish_sensor)
@@ -68,8 +69,9 @@
           output="screen"
           required="true" >
       <param name="device" type="str" value="$(arg device)" />
+      <param name="urdf_path" type="str" value="$(arg urdf_path)"
+             if="$(eval len(arg('urdf_path')) > 0)"/>
       <rosparam subst_value="true" >
-        urdf_path: $(arg urdf_path)
         servo_config_path: $(arg servo_config_path)
         publish_imu: $(arg publish_imu)
         publish_sensor: $(arg publish_sensor)
