@@ -91,7 +91,7 @@ def make_urdf_file(joint_name_to_id):
         joint = ET.SubElement(robot, "joint", name=joint_name, type="continuous")
         ET.SubElement(joint, "parent", link=previous_link_name)
         ET.SubElement(joint, "child", link=link_name)
-
+        ET.SubElement(joint, "limit", velocity="7.47998", effort="0.656248")
         previous_link_name = link_name
 
     tmp_urdf_file = tempfile.mktemp(suffix=".urdf")
