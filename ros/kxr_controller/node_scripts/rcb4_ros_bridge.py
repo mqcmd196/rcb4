@@ -184,6 +184,7 @@ class RCB4ROSBridge:
 
     def setup_urdf_and_model(self):
         robot_model = RobotModel()
+        rospy.loginfo(f"[setup_urdf_and_model] Loading URDF File. {self.urdf_path}")
         if self.urdf_path is None:
             self.urdf_path = make_urdf_file(self.joint_name_to_id)
             rospy.loginfo("Use temporary URDF")
