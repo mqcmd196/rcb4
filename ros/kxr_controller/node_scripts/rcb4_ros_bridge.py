@@ -978,7 +978,7 @@ class RCB4ROSBridge:
                 if idx is None:
                     continue
                 position = np.deg2rad(av[idx])
-                effort = torque_vector[idx]
+                effort = np.deg2rad(torque_vector[idx])
                 msg.position.append(position)
                 msg.effort.append(effort)
                 msg.name.append(name)
@@ -986,8 +986,7 @@ class RCB4ROSBridge:
                     header=msg.header,
                     name=name,
                     position=position,
-                    error=effort,
-                    temperature=temperatures)
+                    error=effort)
                 if temperatures is not None and len(temperatures) > idx:
                     servo_state_msg.temperature = temperatures[idx]
                 if currents is not None and len(currents) > idx:
