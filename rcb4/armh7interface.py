@@ -1449,7 +1449,7 @@ class ARMH7Interface:
             return servo_on_ids
         return []
 
-    def switch_reading_servo_crreunt(self, enable=True):
+    def switch_reading_servo_current(self, enable=True):
         if enable:
             value = 1
         else:
