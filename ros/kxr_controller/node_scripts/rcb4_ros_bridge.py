@@ -365,7 +365,7 @@ class RCB4ROSBridge:
             return False
 
         if self.read_current:
-            serial_call_with_retry(self.interface.switch_reading_servo_crreunt, enable=True, max_retries=3)
+            serial_call_with_retry(self.interface.switch_reading_servo_current, enable=True, max_retries=3)
         if self.read_temperature:
             serial_call_with_retry(self.interface.switch_reading_servo_temperature, enable=True, max_retries=3)
 
@@ -1021,7 +1021,7 @@ class RCB4ROSBridge:
         self.interface.close()
         self.interface = self.setup_interface()
         if self.read_current:
-            serial_call_with_retry(self.interface.switch_reading_servo_crreunt, enable=True, max_retries=3)
+            serial_call_with_retry(self.interface.switch_reading_servo_current, enable=True, max_retries=3)
         if self.read_temperature:
             serial_call_with_retry(self.interface.switch_reading_servo_temperature, enable=True, max_retries=3)
         self.subscribe()
