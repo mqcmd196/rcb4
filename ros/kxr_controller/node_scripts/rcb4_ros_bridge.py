@@ -178,8 +178,8 @@ class RCB4ROSBridge:
         self.urdf_path = rospy.get_param("~urdf_path", None)
         self.use_rcb4 = rospy.get_param("~use_rcb4", False)
         self.control_pressure = rospy.get_param("~control_pressure", False)
-        self.read_temperature = rospy.get_param("~read_temperature", True) and not self.use_rcb4
-        self.read_current = rospy.get_param("~read_current", True) and not self.use_rcb4
+        self.read_temperature = rospy.get_param("~read_temperature", False) and not self.use_rcb4
+        self.read_current = rospy.get_param("~read_current", False) and not self.use_rcb4
         self.base_namespace = self.get_base_namespace()
 
     def setup_urdf_and_model(self):
