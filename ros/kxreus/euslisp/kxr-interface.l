@@ -48,7 +48,8 @@
 
 
 (defmethod kxr-interface
-  (:init (robot &rest args &key (type :default-controller) &allow-other-keys)
+  (:init (robot &rest args &key (type :default-controller)
+                (input-joint-names nil) &allow-other-keys)
    (let* ((namespace (cadr (memq :namespace args)))
           (c-name (cadr (memq :controller-name args)))
           (joint-param (if namespace (format nil "~A/~A/joints" namespace c-name)
@@ -57,7 +58,7 @@
                             (format nil "/rcb4_ros_bridge/control_pressure"))))
      (setq control-pressure (ros::get-param pressure-param nil))
      (setq controller-name (cadr (memq :controller-name args)))
-     (setq joint-names (ros::get-param joint-param nil))
+     (setq joint-names (ros::get-param joint-param input-joint-names))
      (while (and (ros::ok) (null joint-names))
        (ros::ros-info (format nil "Waiting ~A rosparam set" joint-param))
        (setq joint-names (ros::get-param joint-param nil))
