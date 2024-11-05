@@ -388,6 +388,7 @@ class RCB4ROSBridge:
             )
             trim_vector_servo_ids.append(servo_id)
             trim_vector_offset.append(direction * offset)
+        self.interface._actuator_to_joint_matrix = np.linalg.inv(self.interface.joint_to_actuator_matrix)
         if self.interface.__class__.__name__ != "RCB4Interface":
             if len(trim_vector_offset) > 0:
                 ret = serial_call_with_retry(
