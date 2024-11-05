@@ -634,7 +634,13 @@ class RCB4ROSBridge:
                 + "Control board is switch off or cable is disconnected?"
             )
 
-        av = self.interface.angle_vector()
+        av = serial_call_with_retry(self.interface.angle_vector,
+                                    max_retries=10)
+        if av is None:
+            return self.servo_on_off_server.set_aborted(
+                text="Failed to call servo on off. "
+                + "Control board is switch off or cable is disconnected?"
+            )
         joint_names = []
         positions = []
         for joint_name in self.fullbody_jointnames:
