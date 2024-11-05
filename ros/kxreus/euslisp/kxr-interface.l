@@ -43,7 +43,8 @@
 
 
 (defclass kxr-interface
-  :super robot-interface
+  ;; :super robot-interface
+  :super robot-move-base-interface
   :slots (joint-names servo-on-off-client controller-name control-pressure))
 
 
@@ -66,6 +67,9 @@
 
    (send-super* :init :robot robot :type type
                 :groupname "kxr_interface"
+                :base-controller-action-name nil
+                :base-frame-id "base_link"
+                :cmd-vel-topic "/diff_drive_controller/cmd_vel"
                 args)
 
    (setq servo-on-off-client (instance ros::simple-action-client :init
